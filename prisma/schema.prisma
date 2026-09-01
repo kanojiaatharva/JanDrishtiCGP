@@ -1,0 +1,514 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  publicId      String    @unique @map("public_id") @default(uuid())
+  firebaseUid   String    @unique @map("firebase_uid")
+  roleId        String    @map("role_id")
+  status        String    @default("ACTIVE")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  role          Role      @relation(fields: [roleId], references: [id])
+  citizen       Citizen?
+  officer       Officer?
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // CITIZEN, FIELD_WORKER, OFFICER, DISTRICT_ADMIN, ANALYST, AUDITOR, SUPER_ADMIN
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  users       User[]
+
+  @@map("roles")
+}
+
+model Citizen {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  displayName       String?  @map("display_name")
+  phoneHash         String?  @map("phone_hash")
+  phoneLast4        String?  @map("phone_last4")
+  preferredLanguage String   @default("hi") @map("preferred_language")
+  districtId        String?  @map("district_id")
+  consentVersion    String?  @map("consent_version")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user              User     @relation(fields: [userId], references: [id])
+  district          District? @relation(fields: [districtId], references: [id])
+  reports           Report[]
+  notifications     Notification[]
+  consents          Consent[]
+
+  @@map("citizens")
+}
+
+model Officer {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  employeeReference String?  @map("employee_reference")
+  department        String?
+  districtId        String?  @map("district_id")
+  mfaRequired       Boolean  @default(true) @map("mfa_required")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user              User     @relation(fields: [userId], references: [id])
+  district          District? @relation(fields: [districtId], references: [id])
+  reviews           OfficerReview[]
+
+  @@map("officers")
+}
+
+model State {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  
+  districts District[]
+  locations Location[]
+
+  @@map("states")
+}
+
+model District {
+  id        String   @id @default(uuid())
+  stateId   String   @map("state_id")
+  code      String
+  name      String
+  
+  state     State    @relation(fields: [stateId], references: [id])
+  wards     Ward[]
+  locations Location[]
+  citizens  Citizen[]
+  officers  Officer[]
+  clusters  IssueCluster[]
+
+  @@map("districts")
+}
+
+model Ward {
+  id               String   @id @default(uuid())
+  districtId       String   @map("district_id")
+  code             String
+  name             String
+  boundaryReference String? @map("boundary_reference")
+  
+  district         District @relation(fields: [districtId], references: [id])
+  localities       Locality[]
+  locations        Location[]
+  clusters         IssueCluster[]
+
+  @@map("wards")
+}
+
+model Locality {
+  id        String   @id @default(uuid())
+  wardId    String   @map("ward_id")
+  name      String
+  type      String?
+  
+  ward      Ward     @relation(fields: [wardId], references: [id])
+  locations Location[]
+
+  @@map("localities")
+}
+
+model Location {
+  id          String   @id @default(uuid())
+  stateId     String?  @map("state_id")
+  districtId  String?  @map("district_id")
+  wardId      String?  @map("ward_id")
+  localityId  String?  @map("locality_id")
+  latitude    Float?
+  longitude   Float?
+  point       Unsupported("POINT")?
+  source      String // USER_CONFIRMED, WHATSAPP, MAP, ADDRESS, ADMIN, AI, OFFICER
+  confidence  Float?
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  state       State?    @relation(fields: [stateId], references: [id])
+  district    District? @relation(fields: [districtId], references: [id])
+  ward        Ward?     @relation(fields: [wardId], references: [id])
+  locality    Locality? @relation(fields: [localityId], references: [id])
+  reports     Report[]
+
+  @@map("locations")
+}
+
+model Report {
+  id             String   @id @default(uuid())
+  publicId       String   @unique @map("public_id") @default(uuid())
+  citizenId      String   @map("citizen_id")
+  sourceChannel  String   @map("source_channel") // MOBILE, WEB, WHATSAPP, IVR, KIOSK
+  status         String // CREATED, PROCESSING, AWAITING_CONFIRMATION, SUBMITTED, AI_PROCESSED, CLUSTERED, PRIORITIZED, UNDER_REVIEW, NEEDS_MORE_INFO, ACTION_PLANNED, IN_PROGRESS, RESOLVED, REJECTED, DUPLICATE
+  language       String   @default("hi")
+  categoryId     String?  @map("category_id")
+  subcategory    String?
+  summary        String?  @db.Text
+  description    String?  @db.Text
+  locationId     String?  @map("location_id")
+  severity       Int?
+  urgency        Int?
+  aiConfidence   Float?   @map("ai_confidence")
+  clusterId      String?  @map("cluster_id")
+  submittedAt    DateTime? @map("submitted_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  citizen        Citizen  @relation(fields: [citizenId], references: [id])
+  category       IssueCategory? @relation(fields: [categoryId], references: [id])
+  location       Location? @relation(fields: [locationId], references: [id])
+  cluster        IssueCluster? @relation(fields: [clusterId], references: [id])
+  
+  media          ReportMedia[]
+  transcripts    ReportTranscript[]
+  aiAnalysis     ReportAiAnalysis[]
+  clusterMembers ClusterMember[]
+  notifications  Notification[]
+
+  @@index([publicId])
+  @@index([citizenId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([locationId])
+  @@index([clusterId])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+model ReportMedia {
+  id                  String   @id @default(uuid())
+  reportId            String   @map("report_id")
+  storageObjectKey    String   @map("storage_object_key")
+  mediaType           String   @map("media_type")
+  mimeType            String   @map("mime_type")
+  durationSeconds     Int?     @map("duration_seconds")
+  checksum            String?
+  processingStatus    String   @default("PENDING") @map("processing_status")
+  retentionExpiresAt  DateTime? @map("retention_expires_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  
+  report              Report   @relation(fields: [reportId], references: [id])
+
+  @@map("report_media")
+}
+
+model ReportTranscript {
+  id           String   @id @default(uuid())
+  reportId     String   @map("report_id")
+  language     String
+  transcript   String   @db.Text
+  confidence   Float?
+  provider     String?
+  modelVersion String?  @map("model_version")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  report       Report   @relation(fields: [reportId], references: [id])
+
+  @@map("report_transcripts")
+}
+
+model ReportAiAnalysis {
+  id                   String   @id @default(uuid())
+  reportId             String   @map("report_id")
+  modelProvider        String?  @map("model_provider")
+  modelName            String?  @map("model_name")
+  modelVersion         String?  @map("model_version")
+  promptVersion        String?  @map("prompt_version")
+  language             String?
+  category             String?
+  subcategory          String?
+  summary              String?  @db.Text
+  severity             Int?
+  urgency              Int?
+  entitiesJson         Json?    @map("entities_json")
+  locationJson         Json?    @map("location_json")
+  confidence           Float?
+  rawResponseReference String?  @map("raw_response_reference")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  report               Report   @relation(fields: [reportId], references: [id])
+
+  @@map("report_ai_analysis")
+}
+
+model IssueCategory {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?  @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  reports          Report[]
+  clusters         IssueCluster[]
+  infrastructure   InfrastructureAsset[]
+  publicProjects   PublicProject[]
+  areaEvidence     AreaEvidence[]
+
+  @@map("issue_categories")
+}
+
+model IssueCluster {
+  id              String   @id @default(uuid())
+  publicId        String   @unique @map("public_id") @default(uuid())
+  categoryId      String   @map("category_id")
+  districtId      String?  @map("district_id")
+  wardId          String?  @map("ward_id")
+  title           String
+  description     String?  @db.Text
+  reportCount     Int      @default(0) @map("report_count")
+  recurrenceScore Float?   @map("recurrence_score")
+  semanticScore   Float?   @map("semantic_score")
+  geographicScore Float?   @map("geographic_score")
+  hotspotScore    Float?   @map("hotspot_score")
+  status          String   @default("ACTIVE")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  category        IssueCategory @relation(fields: [categoryId], references: [id])
+  district        District?     @relation(fields: [districtId], references: [id])
+  ward            Ward?         @relation(fields: [wardId], references: [id])
+  
+  reports         Report[]
+  members         ClusterMember[]
+  priorityScores  PriorityScore[]
+  recommendations Recommendation[]
+
+  @@index([districtId])
+  @@index([wardId])
+  @@map("issue_clusters")
+}
+
+model ClusterMember {
+  clusterId      String   @map("cluster_id")
+  reportId       String   @map("report_id")
+  similarityScore Float?  @map("similarity_score")
+  assignedAt     DateTime @default(now()) @map("assigned_at")
+
+  cluster        IssueCluster @relation(fields: [clusterId], references: [id])
+  report         Report       @relation(fields: [reportId], references: [id])
+
+  @@id([clusterId, reportId])
+  @@map("cluster_members")
+}
+
+model DemographicSnapshot {
+  id                        String   @id @default(uuid())
+  areaType                  String   @map("area_type") // WARD, DISTRICT, LOCALITY
+  areaId                    String   @map("area_id")
+  population                Int
+  populationDensity         Float?   @map("population_density")
+  vulnerablePopulationIndex Float?   @map("vulnerable_population_index")
+  source                    String?
+  datasetVersion            String?  @map("dataset_version")
+  asOfDate                  DateTime @map("as_of_date")
+  createdAt                 DateTime @default(now()) @map("created_at")
+
+  @@map("demographic_snapshots")
+}
+
+model InfrastructureAsset {
+  id             String   @id @default(uuid())
+  areaId         String   @map("area_id")
+  categoryId     String   @map("category_id")
+  assetType      String   @map("asset_type")
+  facilityCount  Int      @default(0) @map("facility_count")
+  coverageScore  Float?   @map("coverage_score")
+  conditionScore Float?   @map("condition_score")
+  capacity       Int?
+  source         String?
+  datasetVersion String?  @map("dataset_version")
+  asOfDate       DateTime @map("as_of_date")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  category       IssueCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("infrastructure_assets")
+}
+
+model PublicProject {
+  id              String   @id @default(uuid())
+  areaId          String   @map("area_id")
+  categoryId      String   @map("category_id")
+  name            String
+  status          String // PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  plannedStart    DateTime? @map("planned_start")
+  plannedEnd      DateTime? @map("planned_end")
+  allocatedBudget Float?    @map("allocated_budget")
+  spentBudget     Float?    @map("spent_budget")
+  source          String?
+  datasetVersion  String?   @map("dataset_version")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  category        IssueCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("public_projects")
+}
+
+model AreaEvidence {
+  id                      String   @id @default(uuid())
+  areaId                  String   @map("area_id")
+  categoryId              String   @map("category_id")
+  demandScore             Float?   @map("demand_score")
+  severityScore           Float?   @map("severity_score")
+  needGapScore            Float?   @map("need_gap_score")
+  infrastructureGapScore  Float?   @map("infrastructure_gap_score")
+  populationNeedScore     Float?   @map("population_need_score")
+  planGapScore            Float?   @map("plan_gap_score")
+  evidenceCompleteness    Float?   @map("evidence_completeness")
+  computedAt              DateTime @default(now()) @map("computed_at")
+  scoringVersion          String?  @map("scoring_version")
+
+  category                IssueCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("area_evidence")
+}
+
+model PriorityScore {
+  id                      String   @id @default(uuid())
+  clusterId               String   @map("cluster_id")
+  score                   Float
+  demandComponent         Float?   @map("demand_component")
+  severityComponent       Float?   @map("severity_component")
+  needGapComponent        Float?   @map("need_gap_component")
+  infrastructureComponent Float?   @map("infrastructure_component")
+  populationComponent     Float?   @map("population_component")
+  planGapComponent        Float?   @map("plan_gap_component")
+  scoringVersion          String?  @map("scoring_version")
+  confidence              Float?
+  evidenceCompleteness    Float?   @map("evidence_completeness")
+  computedAt              DateTime @default(now()) @map("computed_at")
+
+  cluster                 IssueCluster @relation(fields: [clusterId], references: [id])
+  recommendations         Recommendation[]
+
+  @@index([clusterId])
+  @@map("priority_scores")
+}
+
+model Recommendation {
+  id                 String   @id @default(uuid())
+  clusterId          String   @map("cluster_id")
+  priorityScoreId    String   @map("priority_score_id")
+  recommendationType String   @map("recommendation_type")
+  title              String
+  description        String   @db.Text
+  reasoning          String   @db.Text
+  status             String // PENDING_REVIEW, APPROVED, REJECTED, MORE_EVIDENCE_REQUESTED, SUPERSEDED
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  cluster            IssueCluster  @relation(fields: [clusterId], references: [id])
+  priorityScore      PriorityScore @relation(fields: [priorityScoreId], references: [id])
+  reviews            OfficerReview[]
+  actions            GovernmentAction[]
+
+  @@index([status])
+  @@map("recommendations")
+}
+
+model OfficerReview {
+  id               String   @id @default(uuid())
+  recommendationId String   @map("recommendation_id")
+  officerId        String   @map("officer_id")
+  decision         String // APPROVE, REJECT, REQUEST_MORE_EVIDENCE
+  reason           String?  @db.Text
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id])
+  officer          Officer        @relation(fields: [officerId], references: [id])
+
+  @@index([officerId])
+  @@map("officer_reviews")
+}
+
+model GovernmentAction {
+  id               String   @id @default(uuid())
+  recommendationId String   @map("recommendation_id")
+  assignedTo       String?  @map("assigned_to")
+  actionType       String   @map("action_type")
+  status           String // PLANNED, ASSIGNED, IN_PROGRESS, BLOCKED, COMPLETED, CANCELLED
+  description      String?  @db.Text
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id])
+
+  @@map("government_actions")
+}
+
+model Notification {
+  id                String   @id @default(uuid())
+  citizenId         String   @map("citizen_id")
+  reportId          String?  @map("report_id")
+  channel           String // APP, WHATSAPP, SMS, EMAIL
+  type              String
+  status            String // PENDING, SENT, DELIVERED, FAILED
+  messageTemplate   String   @map("message_template")
+  providerMessageId String?  @map("provider_message_id")
+  sentAt            DateTime? @map("sent_at")
+  deliveredAt       DateTime? @map("delivered_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  citizen           Citizen  @relation(fields: [citizenId], references: [id])
+  report            Report?  @relation(fields: [reportId], references: [id])
+
+  @@map("notifications")
+}
+
+model Consent {
+  id          String   @id @default(uuid())
+  citizenId   String   @map("citizen_id")
+  consentType String   @map("consent_type") // DATA_PROCESSING, VOICE_PROCESSING, LOCATION, NOTIFICATIONS, ANALYTICS
+  version     String
+  status      String // ACTIVE, WITHDRAWN
+  capturedAt  DateTime @default(now()) @map("captured_at")
+  withdrawnAt DateTime? @map("withdrawn_at")
+  source      String // APP, WHATSAPP, WEB
+
+  citizen     Citizen  @relation(fields: [citizenId], references: [id])
+
+  @@map("consents")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorUserId  String?  @map("actor_user_id")
+  action       String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  districtId   String?  @map("district_id")
+  metadataJson Json?    @map("metadata_json")
+  requestId    String?  @map("request_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  actor        User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([resourceId])
+  @@map("audit_logs")
+}
