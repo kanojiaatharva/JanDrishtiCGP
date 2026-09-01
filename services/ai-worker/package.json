@@ -1,0 +1,10 @@
+{
+  "name": "@jandrishti/ai-worker",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "@google/genai": "^0.1.2",
+    "@google-cloud/speech": "^6.2.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@jandrishti/validation",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "zod": "^3.22.4"
+  }
+}
