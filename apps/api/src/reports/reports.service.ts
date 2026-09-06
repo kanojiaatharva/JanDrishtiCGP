@@ -6,7 +6,7 @@ import { CreateReportDto } from './dto/report.dto.js';
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, dto: CreateReportDto) {
+  async create(userId: string, dto: CreateReportDto & { _aiMetadata?: any }) {
     // Ensure the citizen profile exists for the user.
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -17,19 +17,40 @@ export class ReportsService {
       throw new NotFoundException('Citizen profile not found');
     }
 
-    return this.prisma.citizenReport.create({
-      data: {
-        citizenId: user.citizenProfile.id,
-        originalInput: dto.originalInput,
-        language: dto.language || 'hi',
-        channel: dto.channel || 'WEB',
-        transcription: dto.transcription,
-        normalizedText: dto.normalizedText,
-        urgency: dto.urgency,
-        severity: dto.severity,
-        // Mock category for now if we don't look it up
-        status: 'SUBMITTED',
-      },
+    // Wrap in a transaction to create the report and the AI analysis (if provided)
+    return this.prisma.$transaction(async (tx) => {
+      const report = await tx.citizenReport.create({
+        data: {
+          citizenId: user.citizenProfile!.id,
+          originalInput: dto.originalInput,
+          language: dto.language || 'hi',
+          channel: dto.channel || 'WEB',
+          transcription: dto.transcription,
+          normalizedText: dto.normalizedText,
+          urgency: dto.urgency,
+          severity: dto.severity,
+          status: 'SUBMITTED',
+        },
+      });
+
+      // If the frontend passed along the AI extraction metadata, save it!
+      // In a more robust worker architecture, a Pub/Sub event would trigger this.
+      if (dto._aiMetadata) {
+        await tx.aIAnalysis.create({
+           data: {
+             reportId: report.id,
+             provider: 'GEMINI',
+             model: dto._aiMetadata.model,
+             modelVersion: dto._aiMetadata.modelVersion,
+             promptVersion: dto._aiMetadata.promptVersion,
+             latency: dto._aiMetadata.latency,
+             confidence: dto._aiMetadata.confidence,
+             structuredResult: dto._aiMetadata.structuredResult
+           }
+        });
+      }
+
+      return report;
     });
   }
 

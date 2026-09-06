@@ -6,4 +6,5 @@ export class CreateReportDto {
   normalizedText?: string;
   urgency?: number;
   severity?: number;
+  _aiMetadata?: any;
 }
