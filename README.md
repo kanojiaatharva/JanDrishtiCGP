@@ -1,26 +1,42 @@
-# JanDrishti Engineering Documentation
+# JanDrishti Prototype - Phase 1
 
-This folder contains the engineering source of truth for the JanDrishti platform.
+JanDrishti is an AI-powered civic intelligence platform. This repository contains the Phase 1 implementation which focuses on establishing a secure and clean full-stack foundation.
 
-## Documents
+## Project Structure
+- `/frontend` - Vite/React application shell (Frontend development is planned for Phase 2).
+- `/backend` - Spring Boot 3.x backend application containing secure APIs for Citizens and Officers.
+- `/docs` - Project documentation.
+- `/scripts` - Automation scripts.
 
-- `PRD.md` — product requirements and scope
-- `ARCHITECTURE.md` — system and deployment architecture
-- `DATABASE.md` — MySQL data model
-- `AI_PIPELINE.md` — AI, clustering and prioritization pipeline
-- `SECURITY.md` — authentication, authorization, privacy and security
-- `API.md` — API contracts
-- `DEMO.md` — end-to-end hackathon demo
-- `../AGENTS.md` — Codex engineering rules
+## Getting Started
 
-## Database Decision
+### Prerequisites
+- JDK 21
+- Maven
+- Node.js (for frontend)
+- MySQL 8+
 
-JanDrishti uses **MySQL 8.x + Prisma** for transactional application data.
+### Setup MySQL
+Create a local MySQL database named `jandrishti`:
+```sql
+CREATE DATABASE jandrishti;
+```
 
-BigQuery remains the analytical warehouse.
+### Backend Setup
+1. Navigate to the `backend` directory.
+2. Copy `.env.example` to `.env` and fill in your database credentials and JWT secret.
+3. Run the application:
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+```
+The application will start on `http://localhost:8080`.
 
-## Build Philosophy
+### Frontend Setup
+1. Navigate to the `frontend` directory.
+2. Run `npm install`
+3. Run `npm run dev`
 
-Build the smallest genuinely functional end-to-end loop first:
-
-Citizen → AI → Report → Cluster → Evidence → Priority → Officer → Action → Citizen.
+## Documentation
+- [Architecture](docs/ARCHITECTURE.md)
+- [Security](docs/SECURITY.md)
+- [API Reference](docs/API.md)

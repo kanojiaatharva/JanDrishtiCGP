@@ -1,418 +1,50 @@
-# JanDrishti — Hackathon Demo Specification
+# JanDrishti 5-Minute Hackathon Demo Script
 
-## 1. Demo Objective
+This script walks through the end-to-end civic intelligence flow of the JanDrishti prototype.
 
-Demonstrate the complete loop:
-
-> **Citizen voice → AI understanding → collective demand → evidence → priority → human decision → citizen update**
-
-The demo should feel like one functioning platform, not disconnected mock screens.
-
----
-
-## 2. Demo Scenario
-
-Citizen:
-
-**Meena**
-
-Issue:
-
-**Drinking water**
-
-Language:
-
-**Hindi**
-
-Area:
-
-**Ward 14**
-
-Seeded environment:
-
-- 1,284 similar water reports;
-- high recurrence;
-- 38% monthly growth;
-- low water coverage;
-- population pressure;
-- no active corresponding project.
+## Prerequisites
+1. **Database**: MySQL running, schema seeded.
+2. **Backend**: Spring Boot active on port 8080.
+3. **Frontend**: Vite active on port 5173.
+4. **Environment**: `GEMINI_API_KEY` present in backend `.env`.
 
 ---
 
-## 3. Demo Sequence
-
-### Step 1 — Citizen
-
-Open mobile app.
-
-Show:
-
-```text
-Namaste, Meena
-
-How can we help your community today?
-
-[ Microphone ]
-
-आप बोलिए...
-```
-
----
-
-### Step 2 — Voice
-
-Citizen speaks:
-
-> हमारे गांव में पीने का पानी साफ नहीं है और हैंडपंप भी अक्सर खराब रहते हैं।
-
----
-
-### Step 3 — AI
-
-Show:
-
-```text
-Language
-Hindi
-
-Issue
-Drinking Water
-
-Severity
-High
-
-Urgency
-High
-
-Confidence
-94%
-```
-
----
-
-### Step 4 — Confirmation
-
-Show AI summary and require:
-
-```text
-[ Submit Report ]
-[ Edit ]
-```
-
-This demonstrates responsible AI.
-
----
-
-### Step 5 — Report ID
-
-Show:
-
-```text
-Thank you.
-
-Your report has been submitted.
-
-JR-2026-001284
-```
-
----
-
-### Step 6 — Officer Dashboard
-
-Switch to web dashboard.
-
-Show KPI cards.
-
-Then map:
-
-```text
-Ward 14
-```
-
-appears as a high-demand hotspot.
-
----
-
-### Step 7 — Hotspot Details
-
-Show:
-
-```text
-Ward 14
-Drinking Water
-
-1,284 reports
-+38% this month
-
-Priority
-92 / 100
-```
-
----
-
-### Step 8 — Evidence
-
-Show:
-
-```text
-Demand
-1,284 reports
-
-Water Coverage
-42%
-
-Population
-18,430
-
-Active Projects
-0
-
-Infrastructure Condition
-Low
-```
-
----
-
-### Step 9 — Explainable Score
-
-Show components:
-
-```text
-Demand              30%
-Severity            20%
-Need Gap            20%
-Infrastructure      15%
-Population           10%
-Plan Gap              5%
-```
-
-Display score = 92/100.
-
----
-
-### Step 10 — Recommendation
-
-Show:
-
-```text
-Recommended Intervention
-
-Upgrade drinking-water infrastructure
-and repair/replace existing handpumps.
-
-Why?
-
-• High recurring citizen demand
-• Low service coverage
-• High population need
-• No matching active project
-```
-
----
-
-### Step 11 — Human Decision
-
-Officer clicks:
-
-```text
-APPROVE
-```
-
-Require confirmation.
-
-Create audit event.
-
-Create government action.
-
----
-
-### Step 12 — Citizen Update
-
-Return to citizen.
-
-Show:
-
-```text
-Your report has been reviewed.
-
-Status:
-Action Planned
-
-The administration has initiated
-a water infrastructure assessment
-for your area.
-```
-
----
-
-## 4. WhatsApp Demo
-
-Start WhatsApp conversation.
-
-```text
-Citizen:
-Hamare yahan road bahut kharab hai.
-
-JanDrishti:
-I understood:
-
-Issue: Road Condition
-Location: Ward 7
-
-Is this correct?
-
-1. Yes
-2. Edit
-3. Cancel
-```
-
-Citizen:
-
-```text
-1
-```
-
-System:
-
-```text
-Report submitted.
-
-JR-2026-001421
-
-Reply STATUS to check progress.
-```
-
----
-
-## 5. Demo Dataset
-
-Seed realistic synthetic data.
-
-Recommended:
-
-```text
-50,000 reports
-10+ districts
-100+ wards
-7–10 categories
-multiple languages
-demographic snapshots
-infrastructure records
-public projects
-```
-
-Create intentional hotspots:
-
-```text
-Ward 14 → Water
-Ward 7  → Roads
-Ward 3  → Healthcare
-Ward 11 → Sanitation
-```
-
----
-
-## 6. Demo Environment
-
-Use:
-
-```text
-development/staging
-```
-
-with a deterministic seed.
-
-Do not depend on external government APIs during the live demo.
-
-External sources should be represented by replaceable ingestion interfaces.
-
----
-
-## 7. Demo Reliability
-
-Before presentation:
-
-- preload dashboard data;
-- verify AI credentials;
-- verify WhatsApp webhook;
-- test mobile microphone permissions;
-- have a text fallback;
-- verify network;
-- keep seeded reports available;
-- ensure recommendation data is deterministic.
-
-The live AI should enhance the demo, but the entire demo must not collapse if one external provider times out.
-
----
-
-## 8. Demo Narrative
-
-Use this story:
-
-### Problem
-
-Government sees thousands of disconnected complaints.
-
-### Transformation
-
-JanDrishti understands them in citizens' own languages.
-
-### Intelligence
-
-Similar complaints become collective demand hotspots.
-
-### Evidence
-
-Demand is combined with infrastructure, demographic and investment data.
-
-### Decision
-
-AI provides an explainable priority recommendation.
-
-### Accountability
-
-A government officer makes the final decision.
-
-### Trust
-
-The citizen receives an update.
-
----
-
-## 9. Winning Moment
-
-The strongest visual transition is:
-
-```text
-ONE CITIZEN VOICE
-       ↓
-1 report
-       ↓
-1,284 similar voices
-       ↓
-WARD 14 HOTSPOT
-       ↓
-92/100 PRIORITY
-       ↓
-EVIDENCE
-       ↓
-OFFICER ACTION
-       ↓
-CITIZEN UPDATE
-```
-
-This communicates the entire JanDrishti thesis in seconds.
-
----
-
-## 10. Fallback Mode
-
-If live AI fails:
-
-- use pre-recorded audio;
-- use deterministic transcript;
-- run the same backend pipeline;
-- retain the exact same UI;
-- clearly mark demo mode internally.
-
-Never replace the whole product with hardcoded UI screenshots.
+## 1. Introduction (0:00 - 1:00)
+**Speaker**: "Namaste. Welcome to JanDrishti. Traditional civic complaint systems are slow, manual, and localized. When hundreds of citizens report the same broken water line, officers have to manually triage each complaint. JanDrishti changes this by using AI to autonomously group complaints into actionable intelligence."
+
+## 2. Citizen Experience (1:00 - 2:00)
+1. Open `http://localhost:5173/login`.
+2. Click **Load Demo Credentials (Citizen)**.
+3. Click **Sign in**.
+4. The mobile-first citizen home screen appears.
+5. **Speaker**: "Here, Meena can report an issue effortlessly. She doesn't need to know which government department to select."
+6. Click the large Microphone button (**Tap to speak**).
+7. Wait 3 seconds for the mock transcription: *"हमारे गांव में पीने का पानी साफ नहीं है, कृपया इसे ठीक करें।"*
+8. Click **Analyze Report**.
+9. **Speaker**: "Instead of a generic form, JanDrishti uses Google Gemini to instantly parse the Hindi text, categorize it as 'Drinking Water', detect the urgency, and extract the location."
+10. Show the **Review Report** screen, pointing out the 90%+ AI Confidence metric.
+11. Click **Confirm Submission**.
+12. **Speaker**: "The report is saved, and behind the scenes, our deterministic Priority Engine immediately recalculates the severity of this issue across the entire district."
+
+## 3. Officer Intelligence Dashboard (2:00 - 3:30)
+1. In a new incognito window, open `http://localhost:5173/login`.
+2. Log in with `officer@demo.com` and password `password`.
+3. The desktop Officer Dashboard appears.
+4. **Speaker**: "Now let's switch to the Government Officer view. Notice the critical alert for Ward 14. Let's look at the Hotspots."
+5. Click **Demand Hotspots** in the sidebar.
+6. **Speaker**: "The system has aggregated over 1,284 individual citizen complaints into a single actionable hotspot for Ward 14 with a Priority Score of 92."
+7. Click the **Ward 14** card.
+
+## 4. Human-in-the-Loop & Explainable AI (3:30 - 4:30)
+1. Scroll down the Hotspot Detail page.
+2. **Speaker**: "AI shouldn't be a black box making government policy. Our Priority Engine provides a mathematical breakdown of why this score is a 92: High Demand, Rapid Growth, and Critical AI Urgency."
+3. Point to the **AI Recommendation** section.
+4. **Speaker**: "Gemini provides tactical recommendations—like deploying temporary water tankers—but the final decision remains strictly human."
+5. Type "Dispatching engineering team immediately" into the Human Decision comment box.
+6. Click **Approve Action**.
+
+## 5. The Feedback Loop (4:30 - 5:00)
+1. **Speaker**: "The decision is recorded in an immutable audit log, and the citizen receives an immediate update."
+2. (Optional: Switch back to Citizen tab, click 'My Reports' to show the status updated to `ACTION_APPROVED`).
+3. **Speaker**: "JanDrishti: Transforming millions of individual complaints into a single, intelligent lens for governance. Thank you."

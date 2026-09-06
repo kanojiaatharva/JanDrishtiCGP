@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:jandrishti
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:default-secret-key-which-is-long-enough-to-be-secure}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
