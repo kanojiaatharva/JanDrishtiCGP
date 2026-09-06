@@ -4,8 +4,11 @@ import com.jandrishti.entity.DemandCluster;
 import com.jandrishti.entity.Notification;
 import com.jandrishti.entity.User;
 import com.jandrishti.entity.enums.Role;
+import com.jandrishti.entity.Report;
+import com.jandrishti.entity.enums.ReportStatus;
 import com.jandrishti.repository.DemandClusterRepository;
 import com.jandrishti.repository.NotificationRepository;
+import com.jandrishti.repository.ReportRepository;
 import com.jandrishti.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,15 +20,18 @@ public class DataSeederService {
     private final PasswordEncoder passwordEncoder;
     private final DemandClusterRepository demandClusterRepository;
     private final NotificationRepository notificationRepository;
+    private final ReportRepository reportRepository;
 
     public DataSeederService(UserRepository userRepository,
                              PasswordEncoder passwordEncoder,
                              DemandClusterRepository demandClusterRepository,
-                             NotificationRepository notificationRepository) {
+                             NotificationRepository notificationRepository,
+                             ReportRepository reportRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.demandClusterRepository = demandClusterRepository;
         this.notificationRepository = notificationRepository;
+        this.reportRepository = reportRepository;
     }
 
     public void seedDemoData() {
@@ -95,7 +101,21 @@ public class DataSeederService {
         createNotification(officer.getId(), null, "Cluster Growth Alert",
                 "Ward 7 Roads cluster grew 22% in the last 7 days. Now 214 reports. Monsoon season correlation detected.", "ALERT");
 
-        System.out.println("[JanDrishti] Demo data seeded: 2 users, 5 clusters, 6 notifications.");
+        // Seed 15 Dummy Reports for Dashboard accuracy
+        for (int i = 1; i <= 6; i++) {
+            seedReport(citizen.getId(), "DRINKING_WATER", "Water contamination", "Ward 14", "Indore", 22.7196, 75.8577, ReportStatus.AI_PROCESSED);
+        }
+        for (int i = 1; i <= 4; i++) {
+            seedReport(citizen.getId(), "ROADS", "Deep pothole", "Ward 7", "Indore", 22.7250, 75.8620, ReportStatus.ACTION_IN_PROGRESS);
+        }
+        for (int i = 1; i <= 3; i++) {
+            seedReport(citizen.getId(), "HEALTH", "Lack of medicines", "Ward 21", "Indore", 22.7350, 75.8700, ReportStatus.RESOLVED);
+        }
+        for (int i = 1; i <= 2; i++) {
+            seedReport(citizen.getId(), "OTHER", "Streetlight not working", "Ward 18", "Indore", 22.7100, 75.8650, ReportStatus.SUBMITTED);
+        }
+
+        System.out.println("[JanDrishti] Demo data seeded: 2 users, 5 clusters, 15 reports, 6 notifications.");
     }
 
     private void seedCluster(String category, String subcategory, String ward, String district,
@@ -130,5 +150,21 @@ public class DataSeederService {
         n.setType(type);
         n.setRead(false);
         notificationRepository.save(n);
+    }
+
+    private void seedReport(Long citizenId, String category, String description, String ward, String district, double lat, double lng, ReportStatus status) {
+        Report r = new Report();
+        r.setReportCode("JR-" + (int)(Math.random() * 900000 + 100000));
+        r.setCitizenId(citizenId);
+        r.setOriginalText(description);
+        r.setLanguage("en");
+        r.setCategory(category);
+        r.setWard(ward);
+        r.setDistrict(district);
+        r.setLatitude(lat);
+        r.setLongitude(lng);
+        r.setStatus(status);
+        r.setAiConfidence(0.85 + Math.random() * 0.1);
+        reportRepository.save(r);
     }
 }
