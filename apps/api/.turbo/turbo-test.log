@@ -1,0 +1,15 @@
+
+> api@0.0.1 test D:\Workspace\Web_Workspace\JanDrishtiCGP\apps\api
+> vitest run
+
+[33mThe plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the [1mresolve.tsconfigPaths[22m option. You can remove the plugin and set [1mresolve.tsconfigPaths: true[22m in your Vite config instead.[39m
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mD:/Workspace/Web_Workspace/JanDrishtiCGP/apps/api[39m
+
+ [32m✓[39m src/app.controller.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 136[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 14:34:33
+[2m   Duration [22m 597ms[2m (transform 29ms, setup 0ms, import 337ms, tests 136ms, environment 0ms)[22m
+

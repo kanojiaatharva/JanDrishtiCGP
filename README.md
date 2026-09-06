@@ -1,26 +1,25 @@
-# JanDrishti Engineering Documentation
+# JanDrishti
 
-This folder contains the engineering source of truth for the JanDrishti platform.
+JanDrishti is a Digital Public Good / AI-powered civic intelligence platform for India.
 
-## Documents
+## Setup Instructions
 
-- `PRD.md` — product requirements and scope
-- `ARCHITECTURE.md` — system and deployment architecture
-- `DATABASE.md` — MySQL data model
-- `AI_PIPELINE.md` — AI, clustering and prioritization pipeline
-- `SECURITY.md` — authentication, authorization, privacy and security
-- `API.md` — API contracts
-- `DEMO.md` — end-to-end hackathon demo
-- `../AGENTS.md` — Codex engineering rules
+### Prerequisites
+- Node.js (v24.16+)
+- pnpm (v8.15+)
+- Docker
 
-## Database Decision
+### Initialization
+1. Clone the repository.
+2. Run `pnpm install` in the root.
+3. Copy `.env.example` to `.env` and configure it.
+4. Run `docker-compose up -d` to start the MySQL and Redis services.
+5. Run `pnpm db:generate` to generate Prisma client.
+6. Run `pnpm dev` to start all applications and services.
 
-JanDrishti uses **MySQL 8.x + Prisma** for transactional application data.
-
-BigQuery remains the analytical warehouse.
-
-## Build Philosophy
-
-Build the smallest genuinely functional end-to-end loop first:
-
-Citizen → AI → Report → Cluster → Evidence → Priority → Officer → Action → Citizen.
+### Scripts
+- `pnpm build`: Build all apps and packages
+- `pnpm dev`: Start all apps in development mode
+- `pnpm lint`: Lint the codebase
+- `pnpm typecheck`: Run TypeScript compiler check
+- `pnpm test`: Run the test suites

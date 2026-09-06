@@ -1,0 +1,17 @@
+
+> api@0.0.1 lint D:\Workspace\Web_Workspace\JanDrishtiCGP\apps\api
+> oxlint src/ test/
+
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/app.controller.ts:14:14]
+ 13 |       dbStatus = 'connected';
+ 14 |     } catch (e) {
+    :              |
+    :              `-- 'e' is declared here
+ 15 |       dbStatus = 'error';
+    `----
+  help: Consider handling this error.
+
+Found 1 warning and 0 errors.
+Finished in 8ms on 6 files with 96 rules using 24 threads.

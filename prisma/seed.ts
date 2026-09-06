@@ -1,13 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding JanDrishti database with deterministic demo data...');
+  console.log('Seeding database...');
 
   // 1. Roles
-  const roles = ['CITIZEN', 'FIELD_WORKER', 'OFFICER', 'DISTRICT_ADMIN', 'ANALYST', 'AUDITOR', 'SUPER_ADMIN'];
+  const roles = ['CITIZEN', 'OFFICER', 'DISTRICT_ADMIN', 'SUPER_ADMIN'];
   for (const roleName of roles) {
     await prisma.role.upsert({
       where: { name: roleName },
@@ -15,168 +14,104 @@ async function main() {
       create: { name: roleName },
     });
   }
-  const citizenRole = await prisma.role.findUnique({ where: { name: 'CITIZEN' } });
-  const officerRole = await prisma.role.findUnique({ where: { name: 'OFFICER' } });
+
+  const superAdminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'SUPER_ADMIN' } });
+  const districtAdminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'DISTRICT_ADMIN' } });
+  const officerRole = await prisma.role.findUniqueOrThrow({ where: { name: 'OFFICER' } });
+  const citizenRole = await prisma.role.findUniqueOrThrow({ where: { name: 'CITIZEN' } });
 
   // 2. Geography
   const state = await prisma.state.upsert({
     where: { code: 'MP' },
     update: {},
-    create: { code: 'MP', name: 'Madhya Pradesh' },
+    create: { name: 'Madhya Pradesh', code: 'MP' },
   });
 
-  const district = await prisma.district.create({
-    data: {
-      stateId: state.id,
-      code: 'IND',
-      name: 'Indore',
-    },
-  });
-
-  const ward = await prisma.ward.create({
-    data: {
-      districtId: district.id,
-      code: 'W14',
-      name: 'Ward 14',
-    },
-  });
-
-  // 3. Issue Category
-  const waterCategory = await prisma.issueCategory.upsert({
-    where: { code: 'WATER' },
+  const districtX = await prisma.district.upsert({
+    where: { name_stateId: { name: 'District X', stateId: state.id } },
     update: {},
-    create: { code: 'WATER', name: 'Water Supply', description: 'Issues related to drinking water, pipelines, and handpumps' },
+    create: { name: 'District X', stateId: state.id },
   });
 
-  // 4. Users & Citizens (Demo user: Meena)
-  const meenaUser = await prisma.user.create({
-    data: {
-      firebaseUid: 'demo-firebase-uid-meena',
-      roleId: citizenRole!.id,
+  const wards = ['Ward 14', 'Ward 7', 'Ward 3'];
+  for (const wardName of wards) {
+    await prisma.ward.upsert({
+      where: { name_districtId: { name: wardName, districtId: districtX.id } },
+      update: {},
+      create: { name: wardName, districtId: districtX.id },
+    });
+  }
+
+  // 3. Demo Users (DEVELOPMENT ONLY)
+  // WARNING: These credentials are for development use only!
+  
+  // Super Admin
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'super@jandrishti.gov.in' },
+    update: {},
+    create: {
+      email: 'super@jandrishti.gov.in',
+      password: '$argon2id$v=19$m=65536,t=3,p=4$wN0Z3rT7q5U$J8j2gG3W9L8o6bH7g1J0vK5rF2zD8eL4cN3qR6wT0gU', // password: admin
+      roleId: superAdminRole.id,
     },
   });
 
-  const meena = await prisma.citizen.create({
-    data: {
-      userId: meenaUser.id,
-      displayName: 'Meena',
-      preferredLanguage: 'hi',
-      districtId: district.id,
-      phoneLast4: '1234',
+  // District Admin
+  const districtAdmin = await prisma.user.upsert({
+    where: { email: 'admin.x@jandrishti.gov.in' },
+    update: {},
+    create: {
+      email: 'admin.x@jandrishti.gov.in',
+      password: '$argon2id$v=19$m=65536,t=3,p=4$wN0Z3rT7q5U$J8j2gG3W9L8o6bH7g1J0vK5rF2zD8eL4cN3qR6wT0gU', // password: admin
+      roleId: districtAdminRole.id,
+      officerProfile: {
+        create: {
+          firstName: 'District',
+          lastName: 'Administrator',
+          designation: 'Collector',
+          districtId: districtX.id,
+        }
+      }
     },
   });
 
-  const officerUser = await prisma.user.create({
-    data: {
-      firebaseUid: 'demo-firebase-uid-officer',
-      roleId: officerRole!.id,
+  // Officer
+  const officer = await prisma.user.upsert({
+    where: { email: 'officer.x@jandrishti.gov.in' },
+    update: {},
+    create: {
+      email: 'officer.x@jandrishti.gov.in',
+      password: '$argon2id$v=19$m=65536,t=3,p=4$wN0Z3rT7q5U$J8j2gG3W9L8o6bH7g1J0vK5rF2zD8eL4cN3qR6wT0gU', // password: admin
+      roleId: officerRole.id,
+      officerProfile: {
+        create: {
+          firstName: 'Jane',
+          lastName: 'Doe',
+          designation: 'Field Officer',
+          districtId: districtX.id,
+        }
+      }
     },
   });
 
-  await prisma.officer.create({
-    data: {
-      userId: officerUser.id,
-      districtId: district.id,
-      department: 'Water Board',
+  // Citizen
+  const citizen = await prisma.user.upsert({
+    where: { phone: '+919999999999' },
+    update: {},
+    create: {
+      phone: '+919999999999',
+      roleId: citizenRole.id,
+      citizenProfile: {
+        create: {
+          firstName: 'Demo',
+          lastName: 'Citizen',
+          languagePreference: 'hi',
+        }
+      }
     },
   });
 
-  // 5. Evidence Data
-  await prisma.demographicSnapshot.create({
-    data: {
-      areaType: 'WARD',
-      areaId: ward.id,
-      population: 18430,
-      source: 'SYNTHETIC_CENSUS',
-      asOfDate: new Date(),
-    },
-  });
-
-  await prisma.infrastructureAsset.create({
-    data: {
-      areaId: ward.id,
-      categoryId: waterCategory.id,
-      assetType: 'DRINKING_WATER_NETWORK',
-      coverageScore: 42.0, // Low coverage
-      conditionScore: 35.0, // Poor condition
-      source: 'SYNTHETIC_INFRA',
-      asOfDate: new Date(),
-    },
-  });
-
-  // 6. Cluster (Hotspot)
-  const cluster = await prisma.issueCluster.create({
-    data: {
-      categoryId: waterCategory.id,
-      districtId: district.id,
-      wardId: ward.id,
-      title: 'Drinking Water Access',
-      description: 'Persistent complaints about unsafe drinking water and broken handpumps in Ward 14.',
-      reportCount: 1284,
-      recurrenceScore: 85.0,
-      semanticScore: 90.0,
-      geographicScore: 95.0,
-      hotspotScore: 92.0,
-    },
-  });
-
-  // 7. Example Report for Meena (This matches the MVP scenario)
-  const report = await prisma.report.create({
-    data: {
-      publicId: 'JR-2026-001284',
-      citizenId: meena.id,
-      sourceChannel: 'MOBILE',
-      status: 'UNDER_REVIEW',
-      language: 'hi',
-      categoryId: waterCategory.id,
-      subcategory: 'DRINKING_WATER',
-      summary: 'Unsafe drinking water and frequently broken handpumps',
-      description: 'हमारे गांव में पीने का पानी साफ नहीं है और हैंडपंप भी अक्सर खराब रहते हैं।',
-      severity: 4,
-      urgency: 4,
-      aiConfidence: 0.94,
-      clusterId: cluster.id,
-      submittedAt: new Date(),
-    },
-  });
-
-  await prisma.clusterMember.create({
-    data: {
-      clusterId: cluster.id,
-      reportId: report.id,
-      similarityScore: 0.98,
-    },
-  });
-
-  // 8. Priority Score & Recommendation
-  const priorityScore = await prisma.priorityScore.create({
-    data: {
-      clusterId: cluster.id,
-      score: 92.0,
-      demandComponent: 28.0, // out of 30
-      severityComponent: 18.0, // out of 20
-      needGapComponent: 18.0, // out of 20
-      infrastructureComponent: 14.0, // out of 15
-      populationComponent: 9.0, // out of 10
-      planGapComponent: 5.0, // out of 5
-      evidenceCompleteness: 100.0,
-      confidence: 0.95,
-    },
-  });
-
-  await prisma.recommendation.create({
-    data: {
-      clusterId: cluster.id,
-      priorityScoreId: priorityScore.id,
-      recommendationType: 'INFRASTRUCTURE_UPGRADE',
-      title: 'Upgrade drinking-water infrastructure and repair/replace existing handpumps.',
-      description: 'The area shows critical need for safe drinking water intervention.',
-      reasoning: 'High recurring citizen demand (1284 reports). Low service coverage (42%). High population need (18,430). No matching active projects.',
-      status: 'PENDING_REVIEW',
-    },
-  });
-
-  console.log('Demo data seeded successfully.');
+  console.log('Seeding complete.');
 }
 
 main()
